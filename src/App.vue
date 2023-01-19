@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 
 let arr = ref([1, 2, 3, 4, 5])
-let arr_drop = ref<number[]>([])
+let arr_drop = ref<string[]>([])
 let draggingElem = ref<HTMLElement>()
 let classDragover = ref("")
 
@@ -28,7 +28,7 @@ function handleDrop(e: DragEvent) {
   e.stopPropagation()
   const elem = e.target as HTMLElement
   console.log("handleDrop", e.target)
-  let data = e.dataTransfer?.getData("id")
+  let data = e.dataTransfer?.getData("id") as string
   arr_drop.value.push(data)
 }
 function handleDragEnter(e: DragEvent) {
@@ -43,14 +43,14 @@ function handleDragLeaveAtDropzone(e: DragEvent) {
 
 <template>
   <p>arr_drop:{{ arr_drop }}</p>
-  <div class="grid grid-cols-2 gap-2 h-full">
-    <div class="w-full bg-slate-400">
+  <div class="grid grid-cols-4 gap-2 h-full">
+    <div class="col-span-1 bg-slate-400">
       <div class="item drag-item" v-for="i in arr" draggable="true" @dragstart="handleDragStart($event, i)"
         @dragend="handleDragEnd" @dragover="handleDragOver">
         Parts {{ i }}
       </div>
     </div>
-    <div class="dropzone" :class="classDragover" @dragover="handleDragOver" @dragenter="handleDragEnter"
+    <div class="col-span-3 dropzone" :class="classDragover" @dragover="handleDragOver" @dragenter="handleDragEnter"
       @dragleave="handleDragLeaveAtDropzone" @drop="handleDrop">
       <div class="item" v-for="i in arr_drop">
         {{ i }}
