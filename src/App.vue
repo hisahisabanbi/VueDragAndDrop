@@ -29,15 +29,61 @@ function handleDrop(e: DragEvent) {
   const elem = e.target as HTMLElement
   console.log("handleDrop", e.target)
   let data = e.dataTransfer?.getData("id") as string
-  arr_drop.value.push(data)
+  if (data) {
+    arr_drop.value.push(data)
+  }
 }
 function handleDragEnter(e: DragEvent) {
   const elem = e.target as HTMLElement
   classDragover.value = "dragover"
 }
 function handleDragLeaveAtDropzone(e: DragEvent) {
-  console.log("handleDragLeaveAtDropzone")
-  classDragover.value = ""
+  // console.log("handleDragLeaveAtDropzone")
+  // classDragover.value = ""
+}
+
+let sortItemIndex: number | undefined = undefined
+function handleDragStartForSort(e: DragEvent, id: string, index: number) {
+  let elem = e.target as HTMLElement
+  elem.style.opacity = '0.4'
+  elem.classList.add('sortTargetSelect')
+  draggingElem.value = elem
+  e.dataTransfer!.effectAllowed = 'move'
+  e.dataTransfer?.setData("sort-id", id)
+  sortItemIndex = index
+}
+function handleDragEndForSort(e: DragEvent) {
+  let elem = e.target as HTMLElement
+  elem.style.opacity = '1'
+  elem.classList.remove('sortTargetSelect')
+  sortItemIndex = undefined
+  document.querySelectorAll(".sort-item").forEach(item => {
+    item.classList.remove("over")
+  })
+}
+function handleDragOverForSort(e: DragEvent) {
+  e.preventDefault()
+}
+function handleDragEnterForSort(e: DragEvent) {
+  console.log("handleDragEnterForSort")
+  const elem = e.target as HTMLElement
+  elem.classList.add("over")
+}
+function handleDragLeaveForSort(e: DragEvent) {
+  const elem = e.target as HTMLElement
+  elem.classList.remove("over")
+}
+function handleDragDropForSort(e: DragEvent, index: number) {
+  e.stopPropagation()
+  let data = e.dataTransfer?.getData("sort-id") as string
+  if (data != "") {
+    // 配列をソート
+    arr_drop.value.splice(sortItemIndex!, 1)
+    console.log("slice arr_drop.value", arr_drop.value)
+    arr_drop.value.splice(index, 0, data)
+    sortItemIndex = undefined
+  }
+  return false;
 }
 </script>
 
@@ -52,7 +98,10 @@ function handleDragLeaveAtDropzone(e: DragEvent) {
     </div>
     <div class="col-span-3 dropzone" :class="classDragover" @dragover="handleDragOver" @dragenter="handleDragEnter"
       @dragleave="handleDragLeaveAtDropzone" @drop="handleDrop">
-      <div class="item" v-for="i in arr_drop">
+      <div class="item sort-item" v-for="(i, index) in arr_drop" draggable="true"
+        @dragstart="handleDragStartForSort($event, i, index)" @dragend="handleDragEndForSort"
+        @dragover="handleDragOverForSort" @dragenter="handleDragEnterForSort" @dragleave="handleDragLeaveForSort"
+        @drop="handleDragDropForSort($event, index)">
         {{ i }}
       </div>
     </div>
@@ -68,8 +117,20 @@ function handleDragLeaveAtDropzone(e: DragEvent) {
   @apply cursor-move
 }
 
+.sort-item {
+  @apply cursor-move
+}
+
+.sort-item.over {
+  border: 3px dotted #666;
+}
+
 .targetSelect {
   @apply bg-orange-400;
+}
+
+.sortTargetSelect {
+  @apply bg-blue-400;
 }
 
 .dropzone {
