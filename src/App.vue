@@ -12,7 +12,7 @@ function handleDragStart(e: DragEvent, id: number) {
   elem.classList.add('targetSelect')
   draggingElem.value = elem
   e.dataTransfer!.effectAllowed = 'copy'
-  e.dataTransfer?.setData("id", id.toString())
+  e.dataTransfer?.setData("add-id", id.toString())
 }
 function handleDragEnd(e: DragEvent) {
   let elem = e.target as HTMLElement
@@ -28,7 +28,7 @@ function handleDrop(e: DragEvent) {
   e.stopPropagation()
   const elem = e.target as HTMLElement
   console.log("handleDrop", e.target)
-  let data = e.dataTransfer?.getData("id") as string
+  let data = e.dataTransfer?.getData("add-id") as string
   if (data) {
     arr_drop.value.push(data)
   }
@@ -57,9 +57,7 @@ function handleDragEndForSort(e: DragEvent) {
   elem.style.opacity = '1'
   elem.classList.remove('sortTargetSelect')
   sortItemIndex = undefined
-  document.querySelectorAll(".sort-item").forEach(item => {
-    item.classList.remove("over")
-  })
+  removeOver()
 }
 function handleDragOverForSort(e: DragEvent) {
   e.preventDefault()
@@ -73,7 +71,7 @@ function handleDragLeaveForSort(e: DragEvent) {
   const elem = e.target as HTMLElement
   elem.classList.remove("over")
 }
-function handleDragDropForSort(e: DragEvent, index: number) {
+function handleDropForSortAndAdd(e: DragEvent, index: number) {
   e.stopPropagation()
   let data = e.dataTransfer?.getData("sort-id") as string
   if (data != "") {
@@ -83,7 +81,23 @@ function handleDragDropForSort(e: DragEvent, index: number) {
     arr_drop.value.splice(index, 0, data)
     sortItemIndex = undefined
   }
+  let addData = e.dataTransfer?.getData("add-id") as string
+  if (addData != "") {
+    arr_drop.value.splice(index, 0, addData)
+    removeOver()
+  }
   return false;
+}
+function deleteItem(index: number) {
+  arr_drop.value.splice(index, 1)
+}
+function removeOver() {
+  document.querySelectorAll(".over").forEach(item => {
+    item.classList.remove("over")
+  })
+}
+function addParts(id: string) {
+  arr_drop.value.push(id)
 }
 </script>
 
@@ -93,7 +107,7 @@ function handleDragDropForSort(e: DragEvent, index: number) {
     <div class="col-span-1 bg-slate-400">
       <div class="item drag-item" v-for="i in arr" draggable="true" @dragstart="handleDragStart($event, i)"
         @dragend="handleDragEnd" @dragover="handleDragOver">
-        Parts {{ i }}
+        Parts {{ i }} <button @click="addParts(i)">追加</button>
       </div>
     </div>
     <div class="col-span-3 dropzone" :class="classDragover" @dragover="handleDragOver" @dragenter="handleDragEnter"
@@ -101,8 +115,9 @@ function handleDragDropForSort(e: DragEvent, index: number) {
       <div class="item sort-item" v-for="(i, index) in arr_drop" draggable="true"
         @dragstart="handleDragStartForSort($event, i, index)" @dragend="handleDragEndForSort"
         @dragover="handleDragOverForSort" @dragenter="handleDragEnterForSort" @dragleave="handleDragLeaveForSort"
-        @drop="handleDragDropForSort($event, index)">
+        @drop="handleDropForSortAndAdd($event, index)">
         {{ i }}
+        <button @click="deleteItem(index)">削除</button>
       </div>
     </div>
   </div>
